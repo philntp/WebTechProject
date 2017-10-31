@@ -1,16 +1,32 @@
 var MongoClient = require('mongodb').MongoClient
-var mongoDB = 'mongodb://admin:admin@ds229435.mlab.com:29435/swusport';
 
-MongoClient.connect(mongoDB, function(err, db) {
-  if (err) return
+var state = {
+    db: null,
+}
 
-  var collection = db.collection('student')
-  collection.insert({id: 2}, (err, result) => {
-    collection.find({}).toArray((err, docs)  => {
-      docs.forEach(res => {
-          console.log(res)
-      })
-      db.close()
+exports.connect = (url, done) => {
+    if (state.db) return done()
+
+    MongoClient.connect(url, (err, db) => {
+        if (err) return done(err)
+        state.db = db
+        done()
     })
-  })
-})
+}
+
+exports.get = () => {
+    return state.db
+}
+
+
+
+exports.close = (done) => {
+    if (state.db) {
+        state.db.close((err, result) => {
+            state.db = null
+            state.mode = null
+            done(err)
+            console.log("MongoDB closed")
+        })
+    }
+}
